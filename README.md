@@ -51,16 +51,16 @@ This module takes as input:
 failures contacting given urls. 
 This is a possible way to define the command for Nagios
 
-```define command { 
+    define command { 
 
-   command_name  check_etokenserver
-   command_line  $USER2$/NagiosCheckeTokenServer.py
+    command_name  check_etokenserver
+    command_line  $USER2$/NagiosCheckeTokenServer.py
 	-u /usr/local/nagios/var/check_sandbox/check_etokenserver/etokenserverurls.txt
 	-o /usr/local/nagios/share/results/etokenserver.txt 
 	-w 10 -c 20
 
-}
-```
+    }
+
 					 
 ### OAR Login
 
@@ -82,22 +82,22 @@ The path to the jMeter binary, is set within the module to
 _/usr/local/apache-jmeter-2.9/bin_, and can be changed replacing
 assigning a value to _jMeterPrefix_ variable in _runJMeter_ call. 
 Here an example of the Nagios command for this check: 
-```
-define command {
 
-   command_name check_oar-login
-   command_line $USER2$/NagiosCheckOARLogin.py 
-   -c 50 -w 25 
-   -o $_SERVICEWEBLOG$ 
-   -j $_SERVICEJMX$ 
-   -l $_SERVICEJMXLOG$ 
-   -n 2				
-}
-```
+    define command {
+
+    command_name check_oar-login
+    command_line $USER2$/NagiosCheckOARLogin.py 
+    -c 50 -w 25 
+    -o $_SERVICEWEBLOG$ 
+    -j $_SERVICEJMX$ 
+    -l $_SERVICEJMXLOG$ 
+    -n 2				
+    }
+
 in this case, several parameters are defined as service macros: 
 
-```
-define service{
+
+    define service{
 
         use generic-service
 		host_name  www.openaccessrepository.it
@@ -110,8 +110,7 @@ define service{
 		_JMX              /usr/local/nagios/myplugins/OpenAccessRepo/jmx/openaccessrepo-login.jmx
 		_JMXLOG           /usr/local/nagios/myplugins/OpenAccessRepo/logs/openaccessrepo-login.log
 		notes_url         https://sg-mon.ct.infn.it/nagios/results/openaccessrepository-login.txt
-				}
-```
+    }
 
 ### Virtuoso
 
