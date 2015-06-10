@@ -51,13 +51,15 @@ failures contacting given urls.
 This is a possible way to define the command for Nagios
 
 >
->	define command { 
->              command_name  check_etokenserver
->	       command_line  $USER2$/NagiosCheckeTokenServer.py
->	       -u /usr/local/nagios/var/check_sandbox/check_etokenserver/etokenserverurls.txt
->	       -o /usr/local/nagios/share/results/etokenserver.txt 
->	       -w 10 -c 20
->	}
+>define command { 
+
+>       command_name  check_etokenserver
+>	command_line  $USER2$/NagiosCheckeTokenServer.py
+>	-u /usr/local/nagios/var/check_sandbox/check_etokenserver/etokenserverurls.txt
+>	-o /usr/local/nagios/share/results/etokenserver.txt 
+>	-w 10 -c 20
+
+>}
 					 
 ### OAR Login
 ### Virtuoso
