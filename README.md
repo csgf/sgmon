@@ -36,7 +36,7 @@ setup properly each of the modules.
   
 ## Configuration
 
-Conformly with the Nagios good practices, all SG-Mon modules return 0
+Conforming with Nagios good practices, all SG-Mon modules return 0
 if the service status is OK, 1 if WARNING and 2 if CRITICAL. In any
 case, the module returns a message with the output of the metric used
 for the probe.
@@ -48,7 +48,9 @@ This module takes as input:
 - a list of eToken urls
 - file where to stream check's output
 - warning and critical thresholds, computed as rate of
-successes contacting given urls. A possible way to define the command for Nagios:
+successes contacting given urls. 
+
+A possible way to define the command for Nagios:
 
     define command { 
     
@@ -113,17 +115,16 @@ in this case, several parameters are defined as service macros:
 ### Virtuoso
 
 Beside built-in plugins, two modules have been developed for Virtuoso,
-checking service availability both with through SPARQL or via REST
-interface. Parameters changes slightly according with the endpoint type
-used 
+checking service availability either submitting explictly a SPARQL query, or contacting the REST
+interface with proper keyword parameters. Endpoint change slightly
 
     define command {
 
     command_name  check_virtuoso_db
     command_line  $USER2$/NagiosCheckVirtuoso.py 
-	-q $_SERVICEQUERYCOUNT$ 
-	-e $_SERVICEENDPOINT$ 
-	-o $_SERVICEWEBLOG$ 
+	--query      $_SERVICEQUERYCOUNT$ 
+	--endpoint   $_SERVICEENDPOINT$ 
+	--outputfile $_SERVICEWEBLOG$ 
     --warning 0 --critical 15000000
     	
 	}
@@ -132,12 +133,12 @@ used
 
     command_name  check_virtuoso_apiREST
 	command_line  $USER2$/NagiosCheckVirtuosoREST.py
-	-k $_SERVICEKEYWORD$ 
-	-e $_SERVICEENDPOINT$ 
-	-o $_SERVICEWEBLOG$ 
-	-l 10 
-	-w 5 
-	-c 0
+	--keyword $_SERVICEKEYWORD$ 
+	--endpoint $_SERVICEENDPOINT$ 
+	--outputfile $_SERVICEWEBLOG$ 
+	--limit 10 
+	--warning 5 
+	--critical 0
 	}
 									  
 as with OAR, several parameters are defined as service macros
