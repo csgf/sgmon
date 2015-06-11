@@ -46,21 +46,19 @@ for the probe.
 This module takes as input:
 
 - a list of eToken urls
-- file where to stream check's output  
-- warning and critical thresholds, which represents here rate of
-failures contacting given urls. 
-This is a possible way to define the command for Nagios
+- file where to stream check's output
+- warning and critical thresholds, computed as rate of
+successes contacting given urls. A possible way to define the command for Nagios:
 
     define command { 
-
+    
     command_name  check_etokenserver
     command_line  $USER2$/NagiosCheckeTokenServer.py
-	-u /usr/local/nagios/var/check_sandbox/check_etokenserver/etokenserverurls.txt
-	-o /usr/local/nagios/share/results/etokenserver.txt 
-	-w 10 -c 20
-
+    --urlsfile /usr/local/nagios/var/check_sandbox/check_etokenserver/etokenserverurls.txt
+    --outputfile /usr/local/nagios/share/results/etokenserver.txt 
+    --warning 10 --critical 20
+    
     }
-
 					 
 ### OAR Login
 
@@ -87,11 +85,11 @@ Here an example of the Nagios command for this check:
 
     command_name check_oar-login
     command_line $USER2$/NagiosCheckOARLogin.py 
-    -c 50 -w 25 
-    -o $_SERVICEWEBLOG$ 
-    -j $_SERVICEJMX$ 
-    -l $_SERVICEJMXLOG$ 
-    -n 2				
+    --critical 50 --warning 25 
+    --outfile $_SERVICEWEBLOG$ 
+    --jmx $_SERVICEJMX$ 
+    --jmx-log $_SERVICEJMXLOG$ 
+    --number-of-users 2				
     }
 
 in this case, several parameters are defined as service macros: 
@@ -114,5 +112,64 @@ in this case, several parameters are defined as service macros:
 
 ### Virtuoso
 
+Beside built-in plugins, two modules have been developed for Virtuoso,
+checking service availability both with through SPARQL or via REST
+interface. Parameters changes slightly according with the endpoint type
+used 
 
+    define command {
+
+    command_name  check_virtuoso_db
+    command_line  $USER2$/NagiosCheckVirtuoso.py 
+	-q $_SERVICEQUERYCOUNT$ 
+	-e $_SERVICEENDPOINT$ 
+	-o $_SERVICEWEBLOG$ 
+    --warning 0 --critical 15000000
+    	
+	}
+    	
+    define command { 
+
+    command_name  check_virtuoso_apiREST
+	command_line  $USER2$/NagiosCheckVirtuosoREST.py
+	-k $_SERVICEKEYWORD$ 
+	-e $_SERVICEENDPOINT$ 
+	-o $_SERVICEWEBLOG$ 
+	-l 10 
+	-w 5 
+	-c 0
+	}
+									  
+as with OAR, several parameters are defined as service macros
+
+    define service{
+    
+    use   generic-service
+	host_name  virtuoso
+	service_description   Number of records in the semantic DB
+	check_interval           10
+	notification_interval    720
+	check_command check_virtuoso_db
+    _QUERYCOUNT    "select count(?s) where  {?s rdf:type <http://semanticweb.org/ontologies/2013/2/7/RepositoryOntology.owl#Resource>}"
+	_ENDPOINT      "http://virtuoso.ct.infn.it:8896/chain-reds-kb/sparql"
+	_WEBLOG        "/usr/local/nagios/share/results/virtuosoDB.txt"
+	servicegroups            Semantic and Open Data
+	}
+	
+	
+	define service{
+							
+    use   generic-service
+    host_name virtuoso
+    service_description      API REST functionality
+    check_interval           10
+    notification_interval  720
+    check_command    check_virtuoso_apiREST
+    _KEYWORD    "eye"
+    _ENDPOINT   "http://www.chain-project.eu/virtuoso/api/simpleResources"
+    _WEBLOG     /usr/local/nagios/share/results/virtuosoAPI.txt
+    notes_url   https://sg-mon.ct.infn.it/nagios/results/virtuosoAPI.txt
+    servicegroups Semantic and Open Data
+	}
+								   
 
