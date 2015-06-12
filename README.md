@@ -42,6 +42,73 @@ case, the module returns a message with the output of the metric used
 for the probe.
 
 ### SGApp
+
+This module is the most complex within SGMon, handling two separate
+interactions : the first with Apache jMeter, for the execution of a
+portlet instance on a CSGF portal, and the second with a CSGF's User
+Tracking Database, in order to check that the application has been
+really submitted to CSGF Engine. It's worth noting that this module is
+completely trasparent to the portlet being submitted, which is defined
+by the jMeter input file (_.jmx_). Here a possible definition of the
+Nagios command 
+
+    define command {
+ 
+    command_name check_sg-hostname-seq
+    command_line $USER2$/NagiosCheckSGApp.py --critical 75 --warning 25
+    --outfile $_SERVICEWEBLOG$ --jmx $_SERVICEJMX$ 
+    --jmx-log $_SERVICEJMXLOG$ --number-of-jobs 1 --utdb-param $_SERVICEDBCONNPARAMS$ 
+    --utdb-classes-prefix $_SERVICELIBRARYPATH$			
+    }
+
+as can be seen, many inputs are actually defined as service
+macros. Outfile is a log file for the check, which is eventually
+exposed by Nagios as extra note. With --number-of-jobs (shortly -n) it
+can be specified how many time to submit the request; in order to
+compute critical and warning rates, will be counted number of
+successful submissions over total submissions.  Here two different
+service definitions : some values are common across different service
+intance, for instance path to User Tracking DB client lib, while
+others vary slightly according with the actual service instance being
+monitored.
+
+    define service{
+ 
+    use         generic-service
+	host_name   recasgateway.cloud.ba.infn.it
+    service_description     Hostname Sequential
+	check_interval          120
+	notification_interval   240
+    check_command           check_sg-hostname-seq
+	servicegroups           Science Gateway Applications
+    _WEBLOG         /usr/local/nagios/share/results/SG-RECAS-BA-hostname-seq.txt
+    _JMX            /usr/local/nagios/myplugins/SG-App-Checks/jmx/SG-Bari-HostnameSeq.jmx
+    _LIBRARYPATH    /usr/local/nagios/myplugins/SG-App-Checks/javalibs
+	_DBCONNPARAMS   /usr/local/nagios/myplugins/SG-App-Checks/etc/SG-Bari-UsersTrackingDBClient.cfg
+	_JMXLOG         /usr/local/nagios/myplugins/SG-App-Checks/logs/SG-Bari-HostnameSeq.txt
+	notes_url    https://sg-mon.ct.infn.it/nagios/results/SG-RECAS-BA-hostname-seq.txt
+	}
+	
+	
+	define service{
+	
+	use                     generic-service
+	host_name               sgw.africa-grid.org
+	service_description     Hostname Sequential
+	check_interval          120
+	notification_interval   240
+	check_command           check_sg-hostname-seq
+	servicegroups           Science Gateway Applications
+	_WEBLOG                 /usr/local/nagios/share/results/SG-AfricaGrid-hostname-seq.txt
+	_JMX                    /usr/local/nagios/myplugins/SG-App-Checks/jmx/SG-AfricaGrid-HostnameSeq.jmx
+	_LIBRARYPATH            /usr/local/nagios/myplugins/SG-App-Checks/javalibs
+	_DBCONNPARAMS           /usr/local/nagios/myplugins/SG-App-Checks/etc/SG-AfricaGrid-UsersTrackingDBClient.cfg
+	_JMXLOG                 /usr/local/nagios/myplugins/SG-App-Checks/logs/SG-AfricaGrid-HostnameSeq.txt
+	notes_url               https://sg-mon.ct.infn.it/nagios/results/SG-AfricaGrid-hostname-seq.txt
+	}
+
+
+
 ### eTokenServer
 This module takes as input:
 
@@ -148,13 +215,13 @@ as with OAR, several parameters are defined as service macros
     use   generic-service
 	host_name  virtuoso
 	service_description   Number of records in the semantic DB
-	check_interval           10
-	notification_interval    720
-	check_command check_virtuoso_db
+	check_interval        10
+	notification_interval 720
+	check_command  check_virtuoso_db
     _QUERYCOUNT    "select count(?s) where  {?s rdf:type <http://semanticweb.org/ontologies/2013/2/7/RepositoryOntology.owl#Resource>}"
 	_ENDPOINT      "http://virtuoso.ct.infn.it:8896/chain-reds-kb/sparql"
 	_WEBLOG        "/usr/local/nagios/share/results/virtuosoDB.txt"
-	servicegroups            Semantic and Open Data
+	servicegroups  Semantic and Open Data
 	}
 	
 	
@@ -162,14 +229,14 @@ as with OAR, several parameters are defined as service macros
 							
     use   generic-service
     host_name virtuoso
-    service_description      API REST functionality
-    check_interval           10
+    service_description    API REST functionality
+    check_interval         10
     notification_interval  720
-    check_command    check_virtuoso_apiREST
-    _KEYWORD    "eye"
-    _ENDPOINT   "http://www.chain-project.eu/virtuoso/api/simpleResources"
-    _WEBLOG     /usr/local/nagios/share/results/virtuosoAPI.txt
-    notes_url   https://sg-mon.ct.infn.it/nagios/results/virtuosoAPI.txt
+    check_command check_virtuoso_apiREST
+    _KEYWORD      "eye"
+    _ENDPOINT     "http://www.chain-project.eu/virtuoso/api/simpleResources"
+    _WEBLOG       /usr/local/nagios/share/results/virtuosoAPI.txt
+    notes_url     https://sg-mon.ct.infn.it/nagios/results/virtuosoAPI.txt
     servicegroups Semantic and Open Data
 	}
 								   
