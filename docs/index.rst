@@ -1,5 +1,6 @@
-SG-Mon - Installation and configuration
-======
+=======================================
+SG-MON - INSTALLATION AND CONFIGURATION
+=======================================
 
 
 About
