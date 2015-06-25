@@ -26,7 +26,7 @@ further dependencies, which are generally mentioned in the preamble of each prob
 
 ## Installation & Configuration
 
-Checkout detailed instructions [here](https://github.com/csgf/sgmon "Installation and Configuration")
+Checkout detailed instructions [here](http://csgf.readthedocs.org/en/latest/sgmon/docs/index.html)
 
 ## Support 
 
