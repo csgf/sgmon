@@ -1,95 +1,98 @@
 #!/usr/bin/python
-import abc,logging
-import sys,signal
-# aggiungere rotazione dei LOG ?
-# DONE 29-10-13
-#from logging.handlers import TimedRotatingFileHandler
+import abc
+import logging
+import sys
+import signal
 from logging.handlers import RotatingFileHandler
 
-"Exit statuses" 
-#OK=0
-#WARNING=1
-#CRITICAL=2
-#UNKNOWN=3
 
 class NagiosCheck(object):
-    "base class for my nagios plugins"
+    "Base class for my Nagios plugins"
     __metaclass__ = abc.ABCMeta
 
-    OK=0
-    WARNING=1
-    CRITICAL=2
-    UNKNOWN=3
+    "Exit statuses"
+    OK = 0
+    WARNING = 1
+    CRITICAL = 2
+    UNKNOWN = 3
 
-    def __init__(self,wT,cT,oF,lL=logging.DEBUG):
-        "get thresholds, initialize working variables"
+    def __init__(self, wT, cT, oF, lL=logging.DEBUG):
+        """Get check thresholds and initialize service variables"""
 
-        self.warningThreshold=wT
-        self.criticalThreshold=cT
+        self.warningThreshold = wT
+        self.criticalThreshold = cT
 
-        self.outMsg="Check not started"
-        # setup logger
-        # basic logger, doesn't perform rotation 
-        # can't keep both - would be double logging
-        #logging.basicConfig(level=lL,
-        #            format='%(asctime)-4s %(levelname)-4s %(message)s',
-        #            datefmt='%Y-%m-%d %H:%M:%S',
-        #            filename=oF,
-        #            filemode='a')
-        self.logger=logging.getLogger('NagiosCheck')
-        
-        #ch = logging.StreamHandler()
-        #ch.setLevel(lL)
-	# timed rotating seems not to work as it apparently requires continous running
-        #logHandler = TimedRotatingFileHandler(oF,when="D",interval=1,backupCount=7)
-        logHandler = RotatingFileHandler(oF,mode='a',maxBytes=19999,backupCount=7)
-        
-	#formatter=        
-	#ch.setFormatter(formatter)
-	logHandler.setFormatter(logging.Formatter('%(asctime)-4s %(levelname)-4s %(message)s'))
+        self.outMsg = "Check not really started"
+        self.logger = logging.getLogger("NagiosCheck")
+        logHandler = RotatingFileHandler(oF, mode='a',
+                                         maxBytes=19999,
+                                         backupCount=7)
+
+        logHandler.setFormatter(
+            logging.Formatter('%(asctime)-4s %(levelname)-4s %(message)s')
+            )
         self.logger.addHandler(logHandler)
-        #logger.addHandler(ch)
         self.logger.setLevel(lL)
-	#self.logger.info("test")
-        self.result=self.UNKNOWN
+        # check result is initially UNKNOWN
+        self.result = self.UNKNOWN
 
-    def verifyThresholds(self,mode="minor"):
-        ''' 
-        in minor mode (default) success is when 
-        check's result is below a certain threshhold.
-        in major mode, success is when check's results have to
-        be greater than given threshold
-        '''
-        if mode=="minor":
+    def verifyThresholds(self, mode="minor"):
+        """
+        Verify that given thresholds are coherent with checks' logic.
+        With minor mode (default), success is when
+        result is BELOW a certain threshhold.
+        In major mode, success is when check's results is
+        ABOVE given threshold
+        """
+
+        if mode == "minor":
             if self.warningThreshold >= self.criticalThreshold:
-                logging.error("FATAL: Violating thresholds (minor) criteria, warning threshold (%.1f) is greater than or equal to critical threshold(%.1f)\n" %(self.warningThreshold, self.criticalThreshold))
+                msg = ("FATAL - Threshold criteria violated. In minor mode "
+                       "warning threshold (%.1f) can't be greater or equal"
+                       "than critical threshold (%.1f) \n"
+                       % (self.warningThreshold, self.criticalThreshold))
+                logging.error(msg)
                 sys.exit(self.UNKNOWN)
             else:
-                logging.debug(("DEBUG: Warning threshold (%.1f) is minor than Critical threshold(%.1f)\n" %(self.warningThreshold, self.criticalThreshold)))
-        elif mode=="major":
+                msg = ("OK, minor mode and warning threshold (%.1f) is"
+                       "smaller than critical threshold (%.1f) \n"
+                       % (self.warningThreshold, self.criticalThreshold))
+                logging.debug(msg)
+        elif mode == "major":
             if self.warningThreshold <= self.criticalThreshold:
-                logging.error("FATAL: Violating thresholds (major) criteria, warning threshold (%.1f) is smaller than or equal to critical threshold(%.1f)\n" %(self.warningThreshold, self.criticalThreshold))
+                msg = ("FATAL - Threshold criteria violated. In major mode "
+                       "warning threshold (%.1f) can't be smaller or equal "
+                       "than critical threshold (%.1f) \n"
+                       % (self.warningThreshold, self.criticalThreshold))
+                logging.error(msg)
                 sys.exit(self.UNKNOWN)
             else:
-                logging.debug(("DEBUG: Warning threshold (%.1f) is major than Critical threshold(%.1f)\n" %(self.warningThreshold, self.criticalThreshold)))
+                msg = ("OK, major mode and warning threshold (%.1f) is "
+                       "greater than critical threshold (%.1f)\n"
+                       % (self.warningThreshold, self.criticalThreshold))
+                logging.debug(msg)
 
     def getResult(self):
+        """Return probe result"""
         return self.result
 
     def getOutMessage(self):
+        """Return probe output message"""
         return self.outMsg
 
-    @abc.abstractmethod    
-    def getInputParameters(self,argV):
-        "get input parameters, each test has to define its own"
+    @abc.abstractmethod
+    def getInputParameters(self, argV):
+        """Get input parameters. Each test has to define its own"""
 
     @abc.abstractmethod
     def runCheck(self):
-        "each test define its own check"
+        """Each test define its own check"""
+
 
 class NagiosTimeout(object):
     """Timeout class using ALARM signal"""
-    class Timeout(Exception): pass
+    class Timeout(Exception):
+        pass
 
     def __init__(self, sec):
         self.sec = sec
@@ -99,8 +102,7 @@ class NagiosTimeout(object):
         signal.alarm(self.sec)
 
     def __exit__(self, *args):
-        signal.alarm(0) # disable alarm
+        signal.alarm(0)     # disable alarm
 
     def raise_timeout(self, *args):
         raise NagiosTimeout.Timeout()
-
